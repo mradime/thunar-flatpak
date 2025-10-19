@@ -187,9 +187,6 @@ modules:
       - -Dthunarx-dirs-envvar=false
       # Disables the VTE-based integrated terminal, a complex widget and potential security vector.
       - -Dterminal=disabled
-    build-options:
-      env:
-        CFLAGS: -UHAVE_VTE
     cleanup:
       - /include
       - /lib/pkgconfig

@@ -18,10 +18,13 @@ jobs:
           ref: main
           fetch-tags: true
 
-      - name: "Fetch Thunar Repository"
+      - name: "Fetch Latest Thunar Tag"
         id: repo
         run: |
-          echo "Latest Thunar Version Found: $VERSION"
+          REPO="https://gitlab.xfce.org/xfce/thunar.git"
+          REG="^v?(\d+\.\d+\.\d+)$"
+          VERSION=$(git ls-remote --tags --sort="-version:refname" $REPO | grep -v '{}$' | awk -F '/' '{print $3}' | grep -P $REG | head -n 1)
+          echo "Latest Thunar version found: $VERSION"
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: "Check For Version Tag"
