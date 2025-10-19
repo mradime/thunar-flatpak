@@ -1,0 +1,175 @@
+name: "Automated Thunar Flatpak CI/CD"
+
+on:
+  workflow_dispatch: # Allows manual triggering
+  schedule:
+    - cron: '0 5 * * *' # Runs daily at 5 AM UTC
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      update: ${{ steps.check.outputs.update }}
+      version: ${{ steps.repo.outputs.version }}
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-tags: true
+
+      - name: "Fetch Thunar Repository"
+        id: repo
+        run: |
+          echo "Latest Thunar Version Found: $VERSION"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: "Check For Version Tag"
+        id: check
+        run: |
+          VERSION=${{ steps.repo.outputs.version }}
+          if git ls-remote --exit-code --tags origin ${VERSION}; then
+            echo "Tag for version ${VERSION} already exists. No update needed."
+            echo "update=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version ${VERSION} detected. Proceeding with build."
+            echo "update=true" >> $GITHUB_OUTPUT
+          fi
+
+  update:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    needs: check
+    if: needs.check.outputs.update
+    permissions:  
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          path: main
+
+      - name: "Update Manifest"
+        uses: docker://ghcr.io/flathub/flatpak-external-data-checker:latest
+        with:
+          args: --edit-only /github/workspace/main/org.xfce.Thunar.jsonc
+
+      - name: "Check Flatpak Branch"
+        id: flatpak
+        run: |
+          if git -C main ls-remote --exit-code --branches origin flatpak; then
+            echo "Flatpak branch already exists."
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "flat_dir=flatpak" >> $GITHUB_OUTPUT
+          else
+            echo "Flatpak branch doesn't exist."
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "flat_dir=flat" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "Checkout Flatpak Repository For Update"
+        if: steps.flatpak.outputs.exists == 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: flatpak
+          path: flatpak
+          fetch-depth: 0
+          lfs: true
+
+      - name: "Checkout Repository For Flatpak Creation"
+        if: steps.flatpak.outputs.exists == 'false'
+        uses: actions/checkout@v5
+        with:
+          path: flatpak
+
+      - name: "Init Flatpak Repository"
+        if: steps.flatpak.outputs.exists == 'false'
+        run: |
+          git -C flatpak switch --orphan flatpak
+          cp main/.gitattributes flatpak/
+          git -C flatpak lfs install
+          git -C flatpak lfs track "**/objects/**"
+
+      - name: 'Import GPG Key'
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+
+      - name: "Build Flatpak"
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          VERSION=${{ needs.check.outputs.version }}
+          FLAT_DIR=${{ steps.flatpak.outputs.flat_dir }}
+          flatpak-builder --repo="$FLAT_DIR" --force-clean --disable-rofiles-fuse --gpg-sign="$GPG_KEY_ID" \
+            --subject="Update Thunar to ${VERSION}" build-dir main/org.xfce.Thunar.jsonc
+
+      - name: "Merge flat into flatpak"
+        if: steps.flatpak.outputs.exists == 'false'
+        run: cp -a flat/. flatpak
+
+      - name: "Create / Update thunar.flatpakrepo"
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          REPO_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          {
+            echo "[Flatpak Repo]";
+            echo "Title=Thunar (Unofficial)";
+            echo "Url=${REPO_URL}";
+            echo "GPGKey=$(gpg --export $GPG_KEY_ID | base64 | tr -d '\n')";
+          } > "flatpak/thunar.flatpakrepo"
+
+      - name: "Ensure ostree refs/remotes directory exists"
+        run: mkdir -p flatpak/refs/remotes
+
+      - name: "Sign Flatpak Repository Summary"
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: flatpak build-update-repo --gpg-sign="$GPG_KEY_ID" --prune flatpak
+
+      - name: 'Setup Pages'
+        uses: actions/configure-pages@v4
+
+      - name: 'Upload Repository as Artifact'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./flatpak
+
+      - name: 'Deploy to GitHub Pages'
+        uses: actions/deploy-pages@v4
+
+      - name: "Configure Git"
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: "Publish Flatpak Repositry"
+        run: |
+          VERSION=${{ needs.check.outputs.version }}
+          if [ -z "$(git -C flatpak status --porcelain)" ]; then
+            echo "✅ No changes to commit."
+          else
+            git -C flatpak add .
+            git -C flatpak commit -m "Deploy Thunar version ${VERSION}"
+            git -C flatpak push origin flatpak
+          fi
+          git -C flatpak tag "deploy-${VERSION}"
+          git -C flatpak push origin "deploy-${VERSION}"
+
+      - name: "Commit Manifest And Tag Main Branch"
+        run: |
+          VERSION=${{ needs.check.outputs.version }}
+          if [ -z "$(git -C main status --porcelain)" ]; then
+            echo "✅ No changes to commit."
+          else
+            git -C main add org.xfce.Thunar.jsonc org.xfce.Thunar.metainfo.xml
+            git -C main commit -m "Update Thunar to version ${VERSION}"
+            git -C main push
+          fi
+          git -C main tag "${VERSION}"
+          git -C main push --tags
