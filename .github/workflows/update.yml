@@ -108,6 +108,8 @@ jobs:
         run: |
           VERSION=${{ needs.check.outputs.version }}
           FLAT_DIR=${{ steps.flatpak.outputs.flat_dir }}
+          mkdir -p "/run/media/$(whoami)"
+          chown "$(whoami)":"$(whoami)" "/run/media/$(whoami)"
           flatpak-builder --repo="$FLAT_DIR" --force-clean --disable-rofiles-fuse --gpg-sign="$GPG_KEY_ID" \
             --subject="Update Thunar to ${VERSION}" build-dir main/org.xfce.Thunar.yaml
 
