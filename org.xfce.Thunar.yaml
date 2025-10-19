@@ -196,6 +196,9 @@ modules:
       - /share/doc
       - /share/gtk-doc
       - /share/man
+      - "*.a"
+      - "*.la"
+      - /share/dbus-1/services/org.xfce.Thunar.FileManager1.service
       - '*.a'
       - '*.la'
     sources:
