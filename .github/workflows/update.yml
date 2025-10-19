@@ -57,7 +57,7 @@ jobs:
       - name: "Update Manifest"
         uses: docker://ghcr.io/flathub/flatpak-external-data-checker:latest
         with:
-          args: --edit-only /github/workspace/main/org.xfce.Thunar.jsonc
+          args: --edit-only /github/workspace/main/org.xfce.Thunar.json
 
       - name: "Check Flatpak Branch"
         id: flatpak
@@ -106,7 +106,7 @@ jobs:
           VERSION=${{ needs.check.outputs.version }}
           FLAT_DIR=${{ steps.flatpak.outputs.flat_dir }}
           flatpak-builder --repo="$FLAT_DIR" --force-clean --disable-rofiles-fuse --gpg-sign="$GPG_KEY_ID" \
-            --subject="Update Thunar to ${VERSION}" build-dir main/org.xfce.Thunar.jsonc
+            --subject="Update Thunar to ${VERSION}" build-dir main/org.xfce.Thunar.json
 
       - name: "Merge flat into flatpak"
         if: steps.flatpak.outputs.exists == 'false'
@@ -167,7 +167,7 @@ jobs:
           if [ -z "$(git -C main status --porcelain)" ]; then
             echo "✅ No changes to commit."
           else
-            git -C main add org.xfce.Thunar.jsonc org.xfce.Thunar.metainfo.xml
+            git -C main add org.xfce.Thunar.json org.xfce.Thunar.metainfo.xml
             git -C main commit -m "Update Thunar to version ${VERSION}"
             git -C main push
           fi
