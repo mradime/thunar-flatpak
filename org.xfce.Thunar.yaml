@@ -26,7 +26,10 @@ finish-args:
 modules:
   - name: xfce4-dev-tools
     buildsystem: autotools
+    build-tools: true
     config-opts:
+      # CRITICAL: Installs all files into the /app directory inside the sandbox.
+      - --prefix=/app
       - --disable-maintainer-mode
       - --disable-static
     cleanup:
