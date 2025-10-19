@@ -29,7 +29,7 @@ modules:
     build-tools: true
     build-commands:
       - touch docs/xdt-csource.1.xml
-      - ./configure --prefix=/app --disable-maintainer-mode --disable-static
+      - ./autogen.sh --prefix=/app --disable-maintainer-mode --disable-static
       - make
       - make install
     config-opts:
