@@ -43,7 +43,7 @@ modules:
         commit: 127d0abd88f3759fca8f6126460465910d24085d
         x-checker-data:
           type: git
-          tag-pattern: "^xfce4-dev-tools-v?(\d+\.\d+\.\d+)$"
+          tag-pattern: ^xfce4-dev-tools-v?(\d+\.\d+\.\d+)$
 
   - name: libxfce4util
     buildsystem: meson
@@ -66,7 +66,7 @@ modules:
         commit: d55a96afd100fabccb073878e2f0503737f2a834
         x-checker-data:
           type: git
-          tag-pattern: "^libxfce4util-v?(\d+\.\d+\.\d+)$"
+          tag-pattern: ^libxfce4util-v?(\d+\.\d+\.\d+)$
 
   - name: xfconf
     buildsystem: meson
@@ -101,7 +101,7 @@ modules:
         commit: 078859af53858cddfa99c4b72070a70ed3eb6772
         x-checker-data:
           type: git
-          tag-pattern: "^xfconf-v?(\d+\.\d+\.\d+)$"
+          tag-pattern: ^xfconf-v?(\d+\.\d+\.\d+)$
 
   - name: libxfce4ui
     buildsystem: meson
@@ -143,7 +143,7 @@ modules:
         commit: 069d076da47216a732f564ae17e07dec7811ad58
         x-checker-data:
           type: git
-          tag-pattern: "^libxfce4ui-v?(\d+\.\d+\.\d+)$"
+          tag-pattern: ^libxfce4ui-v?(\d+\.\d+\.\d+)$
 
   - name: thunar
     buildsystem: meson
@@ -197,5 +197,5 @@ modules:
         commit: eec4d04e10c66f0a537961f63b435755ef357bf2
         x-checker-data:
           type: git
-          tag-pattern: "^thunar-v?(\d+\.\d+\.\d+)$"
+          tag-pattern: ^thunar-v?(\d+\.\d+\.\d+)$
           is-main-source: true
