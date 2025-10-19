@@ -7,7 +7,7 @@ command: thunar
 finish-args:
   - --socket=wayland
   - --device=dri
-  - --filesystem=xdg-home
+  - --filesystem=home
   # Thunar uses DConf to store its settings, such as window size, sidebar preferences, and view modes.
   - --filesystem=xdg-run/dconf
   # Thunar needs this to apply the desktop theme, icons, and fonts, ensuring a visually consistent experience.
