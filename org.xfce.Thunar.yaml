@@ -207,3 +207,5 @@ modules:
           type: git
           tag-pattern: ^thunar-v?(\d+\.\d+\.\d+)$
           is-main-source: true
+      - type: patch
+        path: fix-have-vte-terminal-props.patch
