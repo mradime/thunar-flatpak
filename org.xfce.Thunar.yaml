@@ -25,8 +25,13 @@ finish-args:
 
 modules:
   - name: xfce4-dev-tools
-    buildsystem: autotools
+    buildsystem: simple
     build-tools: true
+    build-commands:
+      - touch docs/xdt-csource.1.xml
+      - ./configure --prefix=/app --disable-maintainer-mode --disable-static
+      - make
+      - make install
     config-opts:
       # CRITICAL: Installs all files into the /app directory inside the sandbox.
       - --prefix=/app
