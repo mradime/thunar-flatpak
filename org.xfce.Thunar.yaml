@@ -28,7 +28,7 @@ modules:
     buildsystem: simple
     build-tools: true
     build-commands:
-      - touch docs/xdt-csource.1.xml
+      - touch docs/xdt-csource.1
       - ./autogen.sh --prefix=/app --disable-maintainer-mode --disable-static
       - make
       - make install
