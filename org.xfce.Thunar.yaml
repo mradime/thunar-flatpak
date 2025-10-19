@@ -15,7 +15,8 @@ finish-args:
   # This is required for the "Move to Trash" functionality to work correctly.
   # - --filesystem=xdg-data/Trash
   # Allows Thunar to access the path where removable media.
-  - --filesystem=run/media
+  - --talk-name=org.freedesktop.UDisks2
+  - filesystem=xdg-run/media
   # Allows communication with the generic desktop portal, like opening a file with its default host application.
   - --talk-name=org.freedesktop.portal.Desktop
   # This allows Thunar to request access to files located outside of its sandbox via a native file-chooser dialog.
