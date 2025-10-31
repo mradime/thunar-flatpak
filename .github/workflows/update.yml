@@ -45,7 +45,7 @@ jobs:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
       options: --privileged
     needs: check
-    if: needs.check.outputs.update
+    if: needs.check.outputs.update == 'true'
     permissions:  
       contents: write
       pages: write
